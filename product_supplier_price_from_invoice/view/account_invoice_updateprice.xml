@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record id="updateprice_view_addbutton" model="ir.ui.view">
+            <field name="name">updateprice view addbutton</field>
+            <field name="model">account.invoice</field>
+            <field name="inherit_id" ref="account.invoice_supplier_form"> </field>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='invoice_open']" position="before">
+                    <button name="generate_lines" string="Update Prices" type="object"  states="draft" class="default" />
+                </xpath>
+            </field>
+        </record>
+
+        <record id="account_invoice_updateprice_form" model="ir.ui.view">
+            <field name="name">account.invoice.updateprice.form</field>
+            <field name="model">account.invoice.updateprice</field>
+            <field name="arch" type="xml">
+                <form string="Update Prices" version="7.0">
+                    <header>
+                    </header>
+                    <sheet>
+                        <group colspan="1" cols="1">
+                            <group>
+                            <h3 colspan="2">
+                               <label string="Price update for "/>
+                               <field name="supplier_name"/>
+                            </h3>
+                            </group>
+                            <p colspan="2">Supplier prices can be updated from this interface, 
+                                all prices are to be considered for quantities of one. 
+                                For products with a non zero value in the "new price" 
+                                field a new pricelist will be generated or an existing 
+                                pricelist for quantities of 1 will be updated. 
+                                If more than one pricelist for quantities of 1 exist 
+                                the first one will be updated and the others will be deleted.
+                            <i>Current prices are excluding discounts.</i></p>
+                            
+                        </group>
+                        <field name="update_price_line_ids" widget="one2many" >
+                            <tree editable="bottom" create="false" delete="false">
+                                <field name="product_id"  readonly="1"/>
+                                <field name="supplier_price"  readonly="1" />
+                                <field name="invoice_price"  readonly="1" />
+                                <field name="new_price" />
+                            </tree>
+                        </field>
+                    </sheet>
+                    <footer>
+                        <button name="save_new_prices" string="Save" type="object" class="oe_highlight"/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel" />
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</openerp>

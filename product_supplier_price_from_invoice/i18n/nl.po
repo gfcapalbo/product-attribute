@@ -1,0 +1,105 @@
+# Translation of OpenERP Server.
+# This file contains the translation of the following modules:
+#	* product_price_update_from_invoice
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: OpenERP Server 7.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-10-30 14:33+0000\n"
+"PO-Revision-Date: 2014-10-30 14:33+0000\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: product_price_update_from_invoice
+#: view:account.invoice.updateprice:0
+msgid "Save"
+msgstr "Opslaan"
+
+#. module: product_price_update_from_invoice
+#: view:account.invoice:0
+#: view:account.invoice.updateprice:0
+msgid "Update Prices"
+msgstr "Leveranciersprijzen bijwerken"
+
+#. module: product_price_update_from_invoice
+#: model:ir.model,name:account_invoice_updateprice.model_account_invoice
+msgid "Invoice"
+msgstr "Factuur"
+
+#. module: product_price_update_from_invoice
+#: model:ir.model,name:account_invoice_updateprice.model_account_invoice_updateprice_line
+msgid "update price lines"
+msgstr "Prijzen bijwerken - regel"
+
+#. module: product_price_update_from_invoice
+#: field:account.invoice.updateprice,account_invoice_id:0
+#: field:account.invoice.updateprice,update_price_line_ids:0
+#: field:account.invoice.updateprice.line,updateprice_id:0
+msgid "unknown"
+msgstr "onbekend"
+
+#. module: product_price_update_from_invoice
+#: help:account.invoice.updateprice.line,new_price:0
+msgid "New price you will want to set in the product"
+msgstr "Nieuwe prijs voor dit product voor deze leverancier"
+
+#. module: product_price_update_from_invoice
+#: field:account.invoice.updateprice.line,supplier_price:0
+msgid "Supplier price "
+msgstr "Leveranciersprijs"
+
+#. module: product_price_update_from_invoice
+#: help:account.invoice.updateprice.line,invoice_price:0
+msgid "Price you have just received in the invoice"
+msgstr "Prijs op deze factuur"
+
+#. module: product_price_update_from_invoice
+#: model:ir.model,name:account_invoice_updateprice.model_account_invoice_updateprice
+msgid "Update Prices on this invoice"
+msgstr "Productprijzen op factuur bijwerken"
+
+#. module: product_price_update_from_invoice
+#: field:account.invoice.updateprice.line,new_price:0
+msgid "Price to set"
+msgstr "Werkelijke prijs"
+
+#. module: product_price_update_from_invoice
+#: field:account.invoice.updateprice.line,invoice_price:0
+msgid "Invoice price"
+msgstr "Prijs op factuur"
+
+#. module: product_price_update_from_invoice
+#: view:account.invoice.updateprice:0
+msgid "Cancel"
+msgstr "Annuleer"
+
+#. module: product_price_update_from_invoice
+#: help:account.invoice.updateprice.line,supplier_price:0
+msgid "Price already saved in your product"
+msgstr "Huidige leveranciersprijs in de productinstellingen"
+
+#. module: product_price_update_from_invoice
+#: view:account.invoice.updateprice:0
+msgid "price update - current prices are excluding discount."
+msgstr "prijzen bijwerken - alle prijzen in dit scherm zijn zonder korting"
+
+#. module: product_price_update_from_invoice
+#: field:account.invoice.updateprice,supplier_name:0
+msgid "Supplier name"
+msgstr "Leverancier"
+
+#. module: product_price_update_from_invoice
+#: view:account.invoice.updateprice:0
+msgid "or"
+msgstr "of"
+
+#. module: product_price_update_from_invoice
+#: field:account.invoice.updateprice.line,product_id:0
+msgid "Product name"
+msgstr "Product"
+
