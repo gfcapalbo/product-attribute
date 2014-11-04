@@ -194,23 +194,23 @@ class UpdatePrice(orm.TransientModel):
                         'qty': 1.00,
                         'suppinfo_id': new_supplier_product
                         }
-                    new_pricelist = pricelistinfo_obj.create(
+                    new_pricelist_id = pricelistinfo_obj.create(
                         cr, uid, vals_pi, context=context)
-                    change_element = [product_obj.id, new_pricelist]
+                    change_element = [product_obj.id, new_pricelist_id]
                     changed_prices.append(change_element)
             # get all the lines of invoice with changed products
             
         all_changed_invoice_lines = []
-        for change in changed_prices: 
+        for product_id, new_pricelist_id in changed_prices: 
             changed_invoice_line_ids = invoiceline_obj.search(cr, uid, [
-                ('product_id', '=', change[0]),
+                ('product_id', '=', product_id),
                 ('invoice_id', '=', price_wizard_id.account_invoice_id.id)
                 ], context=context)
             all_changed_invoice_lines.extend(changed_invoice_line_ids)
             # it will work  if i have the same product in 2 invoice lines
             for invoiceline in changed_invoice_line_ids:
                 new_price = pricelistinfo_obj.browse(
-                    cr, uid, [change[1]], context=context)
+                    cr, uid, [new_pricelist_id], context=context)
                 # write the record with new prices
                 self.pool.get('account.invoice.line').write(
                     cr, uid, invoiceline, {
