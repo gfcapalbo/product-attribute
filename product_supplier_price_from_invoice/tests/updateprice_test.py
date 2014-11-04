@@ -66,13 +66,13 @@ class TestUpdateprice(SingleTransactionCase):
         # check if the update price object has been created
         # with the right values and call the wizard
         invoice_model = reg('account.invoice')
-        invoice_obj = invoice_model.browse(cr, uid, [invoice])
+        invoice_obj = invoice_model.browse(cr, uid, [invoice])[0]
         updateprice = invoice_model.generate_lines(cr, uid, [invoice])
         updateprice_obj = reg('account.invoice.updateprice').browse(
             cr, uid, [updateprice['res_id']])[0]
 
         # check that all the invoice lines are in updateprice
-        assert (len(invoice_obj[0].invoice_line) == len(
+        assert (len(invoice_obj.invoice_line) == len(
             updateprice_obj.update_price_line_ids)), \
             'not all invoice lines are in update screen'
 
@@ -83,7 +83,7 @@ class TestUpdateprice(SingleTransactionCase):
         updateprice_obj.save_new_prices()
 
         # checking that the values have been returned to the invoice
-        for invoice_line in invoice_obj[0].invoice_line:
+        for invoice_line in invoice_obj.invoice_line:
             for price_line in updateprice_obj.update_price_line_ids:
                 if (price_line.product_id ==
                         invoice_line.product_id) and price_line.new_price != 0:
