@@ -28,7 +28,7 @@ class Invoice(orm.Model):
         invoice = self.pool.get('account.invoice').browse(
             cr, uid, ids[0], context=context)
         supplierinfo_obj = self.pool.get('product.supplierinfo')
-        partnerinfo_obj = self.pool.get('pricelist.partnerinfo')
+        pricelistinfo_obj = self.pool.get('pricelist.partnerinfo')
         vals = {
             'account_invoice_id': invoice.id,
             'supplier_name': invoice.partner_id.name
@@ -50,10 +50,11 @@ class Invoice(orm.Model):
                     ], context=context)
             if len(info_ids) > 0:
                 for supplierinfo in supplierinfo_obj.browse(cr, uid, info_ids):
-                    chosen_pricelist_id = partnerinfo_obj.search(
-                        cr, uid, [('suppinfo_id', '=', supplierinfo.id)],
-                        context=context)
-                    supplier_price = partnerinfo_obj.browse(
+                    chosen_pricelist_id = pricelistinfo_obj.search(
+                        cr, uid, [
+                            ('suppinfo_id', '=', supplierinfo.id)
+                        ], context=context)
+                    supplier_price = pricelistinfo_obj.browse(
                         cr, uid, chosen_pricelist_id)[0].price
             else:
                 supplier_price = 0
@@ -120,35 +121,36 @@ class UpdatePrice(orm.TransientModel):
         price_wizard_id = self.browse(cr, uid, ids, context=context)[0]
         changed_prices = []
         supplierinfo_obj = self.pool.get('product.supplierinfo')
-        partnerinfo_obj = self.pool.get('pricelist.partnerinfo')
+        pricelistinfo_obj = self.pool.get('pricelist.partnerinfo')
         invoiceline_obj = self.pool.get('account.invoice.line')
         invoice_obj = self.pool.get('account.invoice')
         for curr_update_price_line in price_wizard_id.update_price_line_ids:
             if curr_update_price_line.new_price != 0:
                 product_obj = curr_update_price_line.product_id
-                info_ids = supplierinfo_obj.search(
-                    cr, uid, [
-                        ('product_id', '=', product_obj.product_tmpl_id.id),
-                        ('name', '=',
-                            price_wizard_id.account_invoice_id.partner_id.id),
-                        ], context=context)
+                info_ids = supplierinfo_obj.search(cr, uid, [
+                    ('product_id', '=', product_obj.product_tmpl_id.id),
+                    ('name', '=',
+                        price_wizard_id.account_invoice_id.partner_id.id),
+                    ], context=context)
                 # supplier exists just change or add pricelists
                 if len(info_ids) > 0:
                     for supplierinfo in supplierinfo_obj.browse(
                             cr, uid, info_ids, context=context):
                         # Get all the pricelists with min quantity lower
                         # than invoice quantity
-                        chosen_pricelist_id = partnerinfo_obj.search(cr, uid, [
-                            ('suppinfo_id', '=', supplierinfo.id),
-                            ('min_quantity', '=', 1)], context=context)
-                        chosen_pricelists = partnerinfo_obj.browse(
+                        chosen_pricelist_id = pricelistinfo_obj.search(
+                            cr, uid, [
+                                ('suppinfo_id', '=', supplierinfo.id),
+                                ('min_quantity', '=', 1)
+                                ], context=context)
+                        chosen_pricelists = pricelistinfo_obj.browse(
                             cr, uid, chosen_pricelist_id, context=context)
                         # change first pricelist
                         changed_one = False
                         if len(chosen_pricelists) > 0:
                             for pricelist in chosen_pricelists:
                                 if changed_one is False:
-                                    partnerinfo_obj.write(
+                                    pricelistinfo_obj.write(
                                         cr, uid, pricelist.id,
                                         {'price':
                                             curr_update_price_line.new_price})
@@ -157,7 +159,7 @@ class UpdatePrice(orm.TransientModel):
                                     changed_prices.append(change_element)
                                     changed_one = True
                                 else:
-                                    partnerinfo_obj.unlink(
+                                    pricelistinfo_obj.unlink(
                                         cr, uid, pricelist.id, context=context)
 
                         # no pricelists for q=1 exist create new pricelist
@@ -169,7 +171,7 @@ class UpdatePrice(orm.TransientModel):
                                 'qty': 1.00,
                                 'suppinfo_id': supplierinfo.id
                                 }
-                            new_pricelist = partnerinfo_obj.create(
+                            new_pricelist = pricelistinfo_obj.create(
                                 cr, uid, vals_pi, context=context)
                             change_element = [product_obj.id, new_pricelist]
                             changed_prices.append(change_element)
@@ -192,25 +194,28 @@ class UpdatePrice(orm.TransientModel):
                         'qty': 1.00,
                         'suppinfo_id': new_supplier_product
                         }
-                    new_pricelist = partnerinfo_obj.create(
+                    new_pricelist = pricelistinfo_obj.create(
                         cr, uid, vals_pi, context=context)
                     change_element = [product_obj.id, new_pricelist]
                     changed_prices.append(change_element)
             # get all the lines of invoice with changed products
-            for change in changed_prices:
-                changed_invoice_line_ids = invoiceline_obj.search(cr, uid, [
-                    ('product_id', '=', change[0]),
-                    ('invoice_id', '=', price_wizard_id.account_invoice_id.id)
-                    ], context=context)
-                # it will work  if i have the same product in 2 invoice lines
-                for invoiceline in changed_invoice_line_ids:
-                    new_price = partnerinfo_obj.browse(
-                        cr, uid, [change[1]], context=context)
-                    # write the record with new prices
-                    self.pool.get('account.invoice.line').write(
-                        cr, uid, invoiceline, {
-                            'price_unit': new_price[0].price
-                            })
+            
+        all_changed_invoice_lines = []
+        for change in changed_prices: 
+            changed_invoice_line_ids = invoiceline_obj.search(cr, uid, [
+                ('product_id', '=', change[0]),
+                ('invoice_id', '=', price_wizard_id.account_invoice_id.id)
+                ], context=context)
+            all_changed_invoice_lines.extend(changed_invoice_line_ids)
+            # it will work  if i have the same product in 2 invoice lines
+            for invoiceline in changed_invoice_line_ids:
+                new_price = pricelistinfo_obj.browse(
+                    cr, uid, [change[1]], context=context)
+                # write the record with new prices
+                self.pool.get('account.invoice.line').write(
+                    cr, uid, invoiceline, {
+                        'price_unit': new_price[0].price
+                        })
         invoice_obj.button_reset_taxes(
             cr, uid, [price_wizard_id.account_invoice_id.id], context=context)
-        return {}
+        return {'changed_invoice_lines': all_changed_invoice_lines}

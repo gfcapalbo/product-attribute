@@ -49,9 +49,16 @@
     the default rule.
     """,
     "category": "Accounting & Finance",
-    "depends": ['product', 'account'],
+    "depends": [
+        'product',
+        'account',
+    ],
     "data": [
-        'view/account_invoice_updateprice.xml'
+        'view/account_invoice_updateprice.xml',
+    ],
+    
+    'test': [
+    #    'tests/account_invoice_updateprice.yml',
     ],
     "auto_install": False,
     "installable": True,
