@@ -44,7 +44,7 @@ class Invoice(orm.Model):
             #  get current supplier price
             info_ids = supplierinfo_obj.search(
                 cr, uid, [
-                    ('product_id', '=', line.product_id.id),
+                    ('product_id', '=', line.product_id.product_tmpl_id.id),
                     ('name', '=', invoice.partner_id.id),
                     ('qty', '=', 1.00)
                     ], context=context)
