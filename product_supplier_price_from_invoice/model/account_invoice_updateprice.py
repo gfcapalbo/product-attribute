@@ -180,6 +180,5 @@ class UpdatePrice(orm.TransientModel):
                     'price_unit': line.new_price
                     }, context=context)
 
-        invoice_obj.button_reset_taxes(
+        return invoice_obj.button_reset_taxes(
             cr, uid, [wizard.account_invoice_id.id], context=context)
-        return True
