@@ -124,12 +124,12 @@ class UpdatePrice(orm.TransientModel):
         pricelistinfo_obj = self.pool.get('pricelist.partnerinfo')
         invoiceline_obj = self.pool.get('account.invoice.line')
         invoice_obj = self.pool.get('account.invoice')
-        product_obj = curr_update_price_line.product_id
-        for curr_update_price_line in price_wizard_id.update_price_line_ids:
-            if curr_update_price_line.new_price == 0:
+        for line in price_wizard_id.update_price_line_ids:
+            if line.new_price == 0:
                 continue
+            product = line.product_id
             info_ids = supplierinfo_obj.search(cr, uid, [
-                ('product_id', '=', product_obj.product_tmpl_id.id),
+                ('product_id', '=', product.product_tmpl_id.id),
                 ('name', '=',
                  price_wizard_id.account_invoice_id.partner_id.id),
             ], context=context)
@@ -139,65 +139,53 @@ class UpdatePrice(orm.TransientModel):
                         cr, uid, info_ids, context=context):
                     # Get all the pricelists with min quantity lower
                     # than invoice quantity
-                    chosen_pricelist_id = pricelistinfo_obj.search(
+                    pricelist_ids = pricelistinfo_obj.search(
                         cr, uid, [
                             ('suppinfo_id', '=', supplierinfo.id),
                             ('min_quantity', '=', 1)
                             ], context=context)
-                    chosen_pricelists = pricelistinfo_obj.browse(
-                        cr, uid, chosen_pricelist_id, context=context)
                     # change first pricelist
-                    changed_one = False
-                    if len(chosen_pricelists) > 0:
-                        for pricelist in chosen_pricelists:
-                            if changed_one is False:
-                                pricelistinfo_obj.write(
-                                    cr, uid, pricelist.id,
-                                    {'price':
-                                         curr_update_price_line.new_price})
-                                change_element = [
-                                    product_obj.id, pricelist.id]
-                                changed_prices.append(change_element)
-                                changed_one = True
-                            else:
-                                pricelistinfo_obj.unlink(
-                                    cr, uid, pricelist.id, context=context)
-
+                    if pricelist_ids:
+                        pricelistinfo_obj.write(
+                            cr, uid, pricelist_ids[0],
+                            {'price': line.new_price}, context=context)
+                        changed_prices.append(
+                            (product.id, pricelist_ids[0]))
+                        pricelistinfo_obj.unlink(
+                            cr, uid, pricelist_ids[1:], context=context)
                     # no pricelists for q=1 exist create new pricelist
                     else:
                         vals_pi = {
-                            'name': 'price for ' + str(product_obj.name),
-                            'price': curr_update_price_line.new_price,
+                            'name': 'price for ' + str(product.name),
+                            'price': line.new_price,
                             'min_quantity': 1.00,
                             'qty': 1.00,
                             'suppinfo_id': supplierinfo.id
                             }
                         new_pricelist = pricelistinfo_obj.create(
                             cr, uid, vals_pi, context=context)
-                        change_element = [product_obj.id, new_pricelist]
-                        changed_prices.append(change_element)
-                # supplier does not exist for
-                # product add a new supplier and a new pricelist
+                        changed_prices.append((product.id, new_pricelist))
+            # supplier does not exist for
+            # product add a new supplier and a new pricelist
             else:
                 vals_si = {
-                    'product_id': product_obj.product_tmpl_id.id,
-                    'name':
-                        price_wizard_id.account_invoice_id.partner_id.id,
+                    'product_id': product.product_tmpl_id.id,
+                    'name': price_wizard_id.account_invoice_id.partner_id.id,
                     'min_qty': 1.00,
                     'delay': 0
                     }
                 new_supplier_product = supplierinfo_obj.create(
                     cr, uid, vals_si, context=context)
                 vals_pi = {
-                    'name': 'price for ' + str(product_obj.name),
-                    'price': curr_update_price_line.new_price,
+                    'name': 'price for ' + str(product.name),
+                    'price': line.new_price,
                     'min_quantity': 1.00,
                     'qty': 1.00,
                     'suppinfo_id': new_supplier_product
                     }
                 new_pricelist = pricelistinfo_obj.create(
                     cr, uid, vals_pi, context=context)
-                change_element = [product_obj.id, new_pricelist]
+                change_element = [product.id, new_pricelist]
                 changed_prices.append(change_element)
 
         # get all the lines of invoice with changed products
