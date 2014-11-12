@@ -56,9 +56,7 @@
     "data": [
         'view/account_invoice_updateprice.xml',
     ],
-    
     'test': [
-    #    'tests/account_invoice_updateprice.yml',
     ],
     "auto_install": False,
     "installable": True,

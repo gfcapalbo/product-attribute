@@ -181,7 +181,7 @@ class UpdatePrice(orm.TransientModel):
                     vals_si = {
                         'product_id': product_obj.product_tmpl_id.id,
                         'name':
-                            price_wizard_id.account_invoice_id.partner_id.id,
+                        price_wizard_id.account_invoice_id.partner_id.id,
                         'min_qty': 1.00,
                         'delay': 0
                         }
@@ -199,9 +199,9 @@ class UpdatePrice(orm.TransientModel):
                     change_element = [product_obj.id, new_pricelist]
                     changed_prices.append(change_element)
             # get all the lines of invoice with changed products
-            
+
         all_changed_invoice_lines = []
-        for change in changed_prices: 
+        for change in changed_prices:
             changed_invoice_line_ids = invoiceline_obj.search(cr, uid, [
                 ('product_id', '=', change[0]),
                 ('invoice_id', '=', price_wizard_id.account_invoice_id.id)
