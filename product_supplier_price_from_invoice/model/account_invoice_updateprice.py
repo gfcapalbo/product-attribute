@@ -133,36 +133,9 @@ class UpdatePrice(orm.TransientModel):
                  price_wizard_id.account_invoice_id.partner_id.id),
             ], context=context)
             # supplier exists just change or add pricelists
-            if len(info_ids) > 0:
-                for supplierinfo in supplierinfo_obj.browse(
-                        cr, uid, info_ids, context=context):
-                    # Get all the pricelists with min quantity lower
-                    # than invoice quantity
-                    pricelist_ids = pricelistinfo_obj.search(
-                        cr, uid, [
-                            ('suppinfo_id', '=', supplierinfo.id),
-                            ('min_quantity', '=', 1)
-                            ], context=context)
-                    # change first pricelist
-                    if pricelist_ids:
-                        pricelistinfo_obj.write(
-                            cr, uid, pricelist_ids[0],
-                            {'price': line.new_price}, context=context)
-                        pricelistinfo_obj.unlink(
-                            cr, uid, pricelist_ids[1:], context=context)
-                    # no pricelists for q=1 exist create new pricelist
-                    else:
-                        vals_pi = {
-                            'name': 'price for ' + str(product.name),
-                            'price': line.new_price,
-                            'min_quantity': 1.00,
-                            'qty': 1.00,
-                            'suppinfo_id': supplierinfo.id
-                            }
-                        pricelistinfo_obj.create(
-                            cr, uid, vals_pi, context=context)
-            # supplier does not exist for
-            # product add a new supplier and a new pricelist
+            pricelist_ids = False
+            if info_ids:
+                supplierinfo_id = info_ids[0]
             else:
                 vals_si = {
                     'product_id': product.product_tmpl_id.id,
@@ -170,14 +143,29 @@ class UpdatePrice(orm.TransientModel):
                     'min_qty': 1.00,
                     'delay': 0
                     }
-                new_supplier_product = supplierinfo_obj.create(
+                supplierinfo_id = supplierinfo_obj.create(
                     cr, uid, vals_si, context=context)
+            # Get all the pricelists with min quantity lower
+            # than invoice quantity
+            pricelist_ids = pricelistinfo_obj.search(
+                cr, uid, [
+                    ('suppinfo_id', '=', supplierinfo_id),
+                    ('min_quantity', '=', 1)
+                    ], context=context)
+            # change first pricelist
+            if pricelist_ids:
+                pricelistinfo_obj.write(
+                    cr, uid, pricelist_ids[0],
+                    {'price': line.new_price}, context=context)
+                pricelistinfo_obj.unlink(
+                    cr, uid, pricelist_ids[1:], context=context)
+                # no pricelists for q=1 exist create new pricelist
                 vals_pi = {
                     'name': 'price for ' + str(product.name),
                     'price': line.new_price,
                     'min_quantity': 1.00,
                     'qty': 1.00,
-                    'suppinfo_id': new_supplier_product
+                    'suppinfo_id': supplierinfo_id
                     }
                 pricelistinfo_obj.create(
                     cr, uid, vals_pi, context=context)
