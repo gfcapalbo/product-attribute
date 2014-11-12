@@ -118,28 +118,27 @@ class UpdatePrice(orm.TransientModel):
     _defaults = {}
 
     def save_new_prices(self, cr, uid, ids, context=None):
-        price_wizard_id = self.browse(cr, uid, ids, context=context)[0]
+        wizard = self.browse(cr, uid, ids, context=context)[0]
         supplierinfo_obj = self.pool.get('product.supplierinfo')
         pricelistinfo_obj = self.pool.get('pricelist.partnerinfo')
         invoiceline_obj = self.pool.get('account.invoice.line')
         invoice_obj = self.pool.get('account.invoice')
-        for line in price_wizard_id.update_price_line_ids:
+        for line in wizard.update_price_line_ids:
             if line.new_price == 0:
                 continue
             product = line.product_id
             info_ids = supplierinfo_obj.search(cr, uid, [
                 ('product_id', '=', product.product_tmpl_id.id),
                 ('name', '=',
-                 price_wizard_id.account_invoice_id.partner_id.id),
+                 wizard.account_invoice_id.partner_id.id),
             ], context=context)
             # supplier exists just change or add pricelists
-            pricelist_ids = False
             if info_ids:
                 supplierinfo_id = info_ids[0]
             else:
                 vals_si = {
                     'product_id': product.product_tmpl_id.id,
-                    'name': price_wizard_id.account_invoice_id.partner_id.id,
+                    'name': wizard.account_invoice_id.partner_id.id,
                     'min_qty': 1.00,
                     'delay': 0
                     }
@@ -174,7 +173,7 @@ class UpdatePrice(orm.TransientModel):
             invoice_line_ids = invoiceline_obj.search(
                 cr, uid, [
                     ('product_id', '=', product.id),
-                    ('invoice_id', '=', price_wizard_id.account_invoice_id.id),
+                    ('invoice_id', '=', wizard.account_invoice_id.id),
                     ], context=context)
             self.pool.get('account.invoice.line').write(
                 cr, uid, invoice_line_ids, {
@@ -182,5 +181,5 @@ class UpdatePrice(orm.TransientModel):
                     }, context=context)
 
         invoice_obj.button_reset_taxes(
-            cr, uid, [price_wizard_id.account_invoice_id.id], context=context)
+            cr, uid, [wizard.account_invoice_id.id], context=context)
         return True
