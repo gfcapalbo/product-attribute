@@ -158,7 +158,8 @@ class UpdatePrice(orm.TransientModel):
                     {'price': line.new_price}, context=context)
                 pricelistinfo_obj.unlink(
                     cr, uid, pricelist_ids[1:], context=context)
-                # no pricelists for q=1 exist create new pricelist
+            # no pricelists for q=1 exist create new pricelist
+            else:
                 vals_pi = {
                     'name': 'price for ' + str(product.name),
                     'price': line.new_price,
