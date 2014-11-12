@@ -175,7 +175,7 @@ class UpdatePrice(orm.TransientModel):
                     ('product_id', '=', product.id),
                     ('invoice_id', '=', wizard.account_invoice_id.id),
                     ], context=context)
-            self.pool.get('account.invoice.line').write(
+            invoiceline_obj.write(
                 cr, uid, invoice_line_ids, {
                     'price_unit': line.new_price
                     }, context=context)
