@@ -119,7 +119,6 @@ class UpdatePrice(orm.TransientModel):
 
     def save_new_prices(self, cr, uid, ids, context=None):
         price_wizard_id = self.browse(cr, uid, ids, context=context)[0]
-        changed_prices = []
         supplierinfo_obj = self.pool.get('product.supplierinfo')
         pricelistinfo_obj = self.pool.get('pricelist.partnerinfo')
         invoiceline_obj = self.pool.get('account.invoice.line')
@@ -149,8 +148,6 @@ class UpdatePrice(orm.TransientModel):
                         pricelistinfo_obj.write(
                             cr, uid, pricelist_ids[0],
                             {'price': line.new_price}, context=context)
-                        changed_prices.append(
-                            (product.id, pricelist_ids[0]))
                         pricelistinfo_obj.unlink(
                             cr, uid, pricelist_ids[1:], context=context)
                     # no pricelists for q=1 exist create new pricelist
@@ -162,9 +159,8 @@ class UpdatePrice(orm.TransientModel):
                             'qty': 1.00,
                             'suppinfo_id': supplierinfo.id
                             }
-                        new_pricelist = pricelistinfo_obj.create(
+                        pricelistinfo_obj.create(
                             cr, uid, vals_pi, context=context)
-                        changed_prices.append((product.id, new_pricelist))
             # supplier does not exist for
             # product add a new supplier and a new pricelist
             else:
@@ -183,28 +179,20 @@ class UpdatePrice(orm.TransientModel):
                     'qty': 1.00,
                     'suppinfo_id': new_supplier_product
                     }
-                new_pricelist = pricelistinfo_obj.create(
+                pricelistinfo_obj.create(
                     cr, uid, vals_pi, context=context)
-                change_element = [product.id, new_pricelist]
-                changed_prices.append(change_element)
 
-        # get all the lines of invoice with changed products
-        all_changed_invoice_lines = []
-        for change in changed_prices:
-            changed_invoice_line_ids = invoiceline_obj.search(cr, uid, [
-                ('product_id', '=', change[0]),
-                ('invoice_id', '=', price_wizard_id.account_invoice_id.id)
-                ], context=context)
-            all_changed_invoice_lines.extend(changed_invoice_line_ids)
-            # it will work  if i have the same product in 2 invoice lines
-            for invoiceline in changed_invoice_line_ids:
-                new_price = pricelistinfo_obj.browse(
-                    cr, uid, [change[1]], context=context)
-                # write the record with new prices
-                self.pool.get('account.invoice.line').write(
-                    cr, uid, invoiceline, {
-                        'price_unit': new_price[0].price
-                        })
+            # Update prices on this invoice's line(s)
+            invoice_line_ids = invoiceline_obj.search(
+                cr, uid, [
+                    ('product_id', '=', product.id),
+                    ('invoice_id', '=', price_wizard_id.account_invoice_id.id),
+                    ], context=context)
+            self.pool.get('account.invoice.line').write(
+                cr, uid, invoice_line_ids, {
+                    'price_unit': line.new_price
+                    }, context=context)
+
         invoice_obj.button_reset_taxes(
             cr, uid, [price_wizard_id.account_invoice_id.id], context=context)
-        return {'changed_invoice_lines': all_changed_invoice_lines}
+        return True
