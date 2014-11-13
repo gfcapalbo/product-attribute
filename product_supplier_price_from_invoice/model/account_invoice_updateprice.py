@@ -44,7 +44,7 @@ class Invoice(orm.Model):
             #  get current supplier price
             info_ids = supplierinfo_obj.search(
                 cr, uid, [
-                    ('product_id', '=', line.product_id.id),
+                    ('product_id', '=', line.product_id.product_tmpl_id.id),
                     ('name', '=', invoice.partner_id.id),
                     ('qty', '=', 1.00)
                     ], context=context)
@@ -118,104 +118,68 @@ class UpdatePrice(orm.TransientModel):
     _defaults = {}
 
     def save_new_prices(self, cr, uid, ids, context=None):
-        price_wizard_id = self.browse(cr, uid, ids, context=context)[0]
-        changed_prices = []
+        wizard = self.browse(cr, uid, ids, context=context)[0]
         supplierinfo_obj = self.pool.get('product.supplierinfo')
         pricelistinfo_obj = self.pool.get('pricelist.partnerinfo')
         invoiceline_obj = self.pool.get('account.invoice.line')
         invoice_obj = self.pool.get('account.invoice')
-        for curr_update_price_line in price_wizard_id.update_price_line_ids:
-            if curr_update_price_line.new_price != 0:
-                product_obj = curr_update_price_line.product_id
-                info_ids = supplierinfo_obj.search(cr, uid, [
-                    ('product_id', '=', product_obj.product_tmpl_id.id),
-                    ('name', '=',
-                        price_wizard_id.account_invoice_id.partner_id.id),
+        for line in wizard.update_price_line_ids:
+            if line.new_price == 0:
+                continue
+            product = line.product_id
+            info_ids = supplierinfo_obj.search(cr, uid, [
+                ('product_id', '=', product.product_tmpl_id.id),
+                ('name', '=',
+                 wizard.account_invoice_id.partner_id.id),
+            ], context=context)
+            # supplier exists just change or add pricelists
+            if info_ids:
+                supplierinfo_id = info_ids[0]
+            else:
+                vals_si = {
+                    'product_id': product.product_tmpl_id.id,
+                    'name': wizard.account_invoice_id.partner_id.id,
+                    'min_qty': 1.00,
+                    'delay': 0
+                    }
+                supplierinfo_id = supplierinfo_obj.create(
+                    cr, uid, vals_si, context=context)
+            # Get all the pricelists with min quantity lower
+            # than invoice quantity
+            pricelist_ids = pricelistinfo_obj.search(
+                cr, uid, [
+                    ('suppinfo_id', '=', supplierinfo_id),
+                    ('min_quantity', '=', 1)
                     ], context=context)
-                # supplier exists just change or add pricelists
-                if len(info_ids) > 0:
-                    for supplierinfo in supplierinfo_obj.browse(
-                            cr, uid, info_ids, context=context):
-                        # Get all the pricelists with min quantity lower
-                        # than invoice quantity
-                        chosen_pricelist_id = pricelistinfo_obj.search(
-                            cr, uid, [
-                                ('suppinfo_id', '=', supplierinfo.id),
-                                ('min_quantity', '=', 1)
-                                ], context=context)
-                        chosen_pricelists = pricelistinfo_obj.browse(
-                            cr, uid, chosen_pricelist_id, context=context)
-                        # change first pricelist
-                        changed_one = False
-                        if len(chosen_pricelists) > 0:
-                            for pricelist in chosen_pricelists:
-                                if changed_one is False:
-                                    pricelistinfo_obj.write(
-                                        cr, uid, pricelist.id,
-                                        {'price':
-                                            curr_update_price_line.new_price})
-                                    change_element = [
-                                        product_obj.id, pricelist.id]
-                                    changed_prices.append(change_element)
-                                    changed_one = True
-                                else:
-                                    pricelistinfo_obj.unlink(
-                                        cr, uid, pricelist.id, context=context)
+            # change first pricelist
+            if pricelist_ids:
+                pricelistinfo_obj.write(
+                    cr, uid, pricelist_ids[0],
+                    {'price': line.new_price}, context=context)
+                pricelistinfo_obj.unlink(
+                    cr, uid, pricelist_ids[1:], context=context)
+            # no pricelists for q=1 exist create new pricelist
+            else:
+                vals_pi = {
+                    'name': 'price for ' + str(product.name),
+                    'price': line.new_price,
+                    'min_quantity': 1.00,
+                    'qty': 1.00,
+                    'suppinfo_id': supplierinfo_id
+                    }
+                pricelistinfo_obj.create(
+                    cr, uid, vals_pi, context=context)
 
-                        # no pricelists for q=1 exist create new pricelist
-                        else:
-                            vals_pi = {
-                                'name': 'price for ' + str(product_obj.name),
-                                'price': curr_update_price_line.new_price,
-                                'min_quantity': 1.00,
-                                'qty': 1.00,
-                                'suppinfo_id': supplierinfo.id
-                                }
-                            new_pricelist = pricelistinfo_obj.create(
-                                cr, uid, vals_pi, context=context)
-                            change_element = [product_obj.id, new_pricelist]
-                            changed_prices.append(change_element)
-                # supplier does not exist for
-                # product add a new supplier and a new pricelist
-                else:
-                    vals_si = {
-                        'product_id': product_obj.product_tmpl_id.id,
-                        'name':
-                            price_wizard_id.account_invoice_id.partner_id.id,
-                        'min_qty': 1.00,
-                        'delay': 0
-                        }
-                    new_supplier_product = supplierinfo_obj.create(
-                        cr, uid, vals_si, context=context)
-                    vals_pi = {
-                        'name': 'price for ' + str(product_obj.name),
-                        'price': curr_update_price_line.new_price,
-                        'min_quantity': 1.00,
-                        'qty': 1.00,
-                        'suppinfo_id': new_supplier_product
-                        }
-                    new_pricelist = pricelistinfo_obj.create(
-                        cr, uid, vals_pi, context=context)
-                    change_element = [product_obj.id, new_pricelist]
-                    changed_prices.append(change_element)
-            # get all the lines of invoice with changed products
-            
-        all_changed_invoice_lines = []
-        for change in changed_prices: 
-            changed_invoice_line_ids = invoiceline_obj.search(cr, uid, [
-                ('product_id', '=', change[0]),
-                ('invoice_id', '=', price_wizard_id.account_invoice_id.id)
-                ], context=context)
-            all_changed_invoice_lines.extend(changed_invoice_line_ids)
-            # it will work  if i have the same product in 2 invoice lines
-            for invoiceline in changed_invoice_line_ids:
-                new_price = pricelistinfo_obj.browse(
-                    cr, uid, [change[1]], context=context)
-                # write the record with new prices
-                self.pool.get('account.invoice.line').write(
-                    cr, uid, invoiceline, {
-                        'price_unit': new_price[0].price
-                        })
-        invoice_obj.button_reset_taxes(
-            cr, uid, [price_wizard_id.account_invoice_id.id], context=context)
-        return {'changed_invoice_lines': all_changed_invoice_lines}
+            # Update prices on this invoice's line(s)
+            invoice_line_ids = invoiceline_obj.search(
+                cr, uid, [
+                    ('product_id', '=', product.id),
+                    ('invoice_id', '=', wizard.account_invoice_id.id),
+                    ], context=context)
+            invoiceline_obj.write(
+                cr, uid, invoice_line_ids, {
+                    'price_unit': line.new_price
+                    }, context=context)
+
+        return invoice_obj.button_reset_taxes(
+            cr, uid, [wizard.account_invoice_id.id], context=context)

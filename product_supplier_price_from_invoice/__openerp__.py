@@ -41,7 +41,8 @@
     the first one will be updated and the others will be deleted.
 
 
-    Note:
+    Note
+    ====
     In Order to use the supplier pricelists, this option must be enabled under
     Settings -> Configuration -> Purchases. Apart from that, you need to add a
     new rule to the default purchase pricelist version based on 'Supplier
@@ -56,9 +57,7 @@
     "data": [
         'view/account_invoice_updateprice.xml',
     ],
-    
     'test': [
-    #    'tests/account_invoice_updateprice.yml',
     ],
     "auto_install": False,
     "installable": True,
