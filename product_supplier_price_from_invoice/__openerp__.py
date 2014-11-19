@@ -24,31 +24,31 @@
     "author": "Therp BV",
     "license": "AGPL-3",
     "description": """
-    Allows to manage per-supplier prices directly from the invoice, by adding
-    an "Update price" button to the invoice when it's in draft state.
-    Clicking the button will show all products on the invoice
-    with their prices,it is possible to assign the new unit price
-    for that supplier.
+Allows to manage per-supplier prices directly from the invoice, by adding
+an "Update price" button to the invoice when it's in draft state.
+Clicking the button will show all products on the invoice
+with their prices,it is possible to assign the new unit price
+for that supplier.
 
-    All new and updated prices are to be considered for quantities of 1.
+All new and updated prices are to be considered for quantities of 1.
 
-    Supplier prices can be updated from this interface,
-    all prices are to be considered for quantities of one.
-    For products with a non zero value in the "new price"
-    field a new pricelist will be generated or an existing
-    pricelist for quantities of 1 will be updated.
-    If more than one pricelist for quantities of 1 exist
-    the first one will be updated and the others will be deleted.
+Supplier prices can be updated from this interface,
+all prices are to be considered for quantities of one.
+For products with a non zero value in the "new price"
+field a new pricelist will be generated or an existing
+pricelist for quantities of 1 will be updated.
+If more than one pricelist for quantities of 1 exist
+the first one will be updated and the others will be deleted.
 
+Note
+====================
 
-    Note
-    ====
-    In Order to use the supplier pricelists, this option must be enabled under
-    Settings -> Configuration -> Purchases. Apart from that, you need to add a
-    new rule to the default purchase pricelist version based on 'Supplier
-    prices on the product form'. This rule must have a higher priority than
-    the default rule.
-    """,
+In Order to use the supplier pricelists, this option must be enabled under
+Settings -> Configuration -> Purchases. Apart from that, you need to add a
+new rule to the default purchase pricelist version based on 'Supplier
+prices on the product form'. This rule must have a higher priority than
+the default rule.
+""",
     "category": "Accounting & Finance",
     "depends": [
         'product',
