@@ -25,6 +25,10 @@ class Invoice(orm.Model):
     _inherit = 'account.invoice'
 
     def generate_lines(self, cr, uid, ids, context=None):
+        """
+        Create a wizard and lines on the wizard for all invoice
+        lines of this invoice with a product on them.
+        """
         invoice = self.pool.get('account.invoice').browse(
             cr, uid, ids[0], context=context)
         supplierinfo_obj = self.pool.get('product.supplierinfo')
@@ -34,7 +38,10 @@ class Invoice(orm.Model):
             cr, uid, {'account_invoice_id': invoice.id}, context=context)
         line_obj = self.pool.get('account.invoice.line')
         line_ids = line_obj.search(
-            cr, uid, [('invoice_id', '=', invoice.id)], context=context)
+            cr, uid, [
+                ('invoice_id', '=', invoice.id),
+                ('product_id', '!=', False),
+                ], context=context)
         lines = line_obj.browse(cr, uid, line_ids, context=context)
         for line in lines:
             #  get current supplier price
@@ -63,20 +70,14 @@ class Invoice(orm.Model):
                 }
             self.pool['account.invoice.updateprice.line'].create(
                 cr, uid, var, context=context)
-        datamodel = self.pool.get('ir.model.data')
-        view_id = datamodel.get_object_reference(
-            cr, uid, 'product_supplier_price_from_invoice',
-            'account_invoice_updateprice_form')
-        res_id = price_wizard_id
 
         return {
             'view_mode': 'form',
             'res_model': 'account.invoice.updateprice',
-            'view_id': view_id[1],
             'type': 'ir.actions.act_window',
             'target': 'new',
             'nodestroy': True,
-            'res_id': res_id
+            'res_id': price_wizard_id
             }
 
 
