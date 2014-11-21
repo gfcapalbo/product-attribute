@@ -27,11 +27,7 @@
                                <field name="supplier_name"/>
                             </h3>
                             </group>
-                            <p colspan="2">Please register the current supplier price
-                            per single unit. If the price is already correctly registered,
-                            you can leave the <i>New price</i> field empty. The price on
-                            the current invoice will be updated as well.
-                            <i>Current prices are excluding discounts.</i></p>
+                            <p colspan="2">Please register the current supplier price per single unit. If the price is already correctly registered, you can leave the New price field empty. The price on the current invoice will be updated as well. Current prices are excluding discounts.</p>
                         </group>
                         <field name="update_price_line_ids" widget="one2many" >
                             <tree editable="bottom" create="false" delete="false">
