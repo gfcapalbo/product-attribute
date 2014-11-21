@@ -110,6 +110,8 @@ class UpdatePrice(orm.TransientModel):
         partner. Supplier pricelists don't generalize within the same
         partner, but are only retrieved by contact. As a workaround, take
         the partner from the related purchase if any as a best guess.
+        If no purchase order can be found, pick the commercial partner
+        over an invoice partner.
         """
         purchase_obj = self.pool['purchase.order']
         res = {}
@@ -123,7 +125,10 @@ class UpdatePrice(orm.TransientModel):
                 res[wiz.id] = purchase.partner_id.id
                 print purchase.partner_id.name
             else:
-                res[wiz.id] = wiz.account_invoice_id.partner_id.id
+                partner = wiz.account_invoice_id.partner_id
+                if partner.type == 'invoice':
+                    partner = partner.commercial_partner_id
+                res[wiz.id] = partner.id
         return res
 
     _columns = {
