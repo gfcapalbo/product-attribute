@@ -25,14 +25,6 @@
     "version": "2.0",
     "author": "Serv. Tecnol. Avanzados - Pedro M. Baeza",
     "category": "Sales Management",
-    "description": """
-Fixed price on pricelist rule
-=============================
-
-Adds a new option on pricelist rules to set a fixed price. This is made using
-a trick that writes on the back 100% in the discount to the base price to get
-a zero base that will add only the price we put in the surcharge price.
-    """,
     "website": "www.serviciosbaeza.com",
     "license": "AGPL-3",
     "depends": [
