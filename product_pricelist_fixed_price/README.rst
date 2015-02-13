@@ -4,6 +4,13 @@ Adds a new option on pricelist rules to set a fixed price. This is made using
 a trick that writes on the back 100% in the discount to the base price to get
 a zero base that will add only the price we put in the surcharge price.
 
+Credits
+=======
+
+Contributors
+------------
+
+* Pedro M. Baeza <pedro.baeza@serviciosbaeza.com>
 
 Maintainer
 ----------
