@@ -25,20 +25,23 @@ class Invoice(orm.Model):
     _inherit = 'account.invoice'
 
     def generate_lines(self, cr, uid, ids, context=None):
+        """
+        Create a wizard and lines on the wizard for all invoice
+        lines of this invoice with a product on them.
+        """
         invoice = self.pool.get('account.invoice').browse(
             cr, uid, ids[0], context=context)
         supplierinfo_obj = self.pool.get('product.supplierinfo')
         pricelistinfo_obj = self.pool.get('pricelist.partnerinfo')
-        vals = {
-            'account_invoice_id': invoice.id,
-            'supplier_name': invoice.partner_id.name
-            }
         price_wizard_obj = self.pool.get('account.invoice.updateprice')
         price_wizard_id = price_wizard_obj.create(
-            cr, uid, vals, context=context)
+            cr, uid, {'account_invoice_id': invoice.id}, context=context)
         line_obj = self.pool.get('account.invoice.line')
         line_ids = line_obj.search(
-            cr, uid, [('invoice_id', '=', invoice.id)], context=context)
+            cr, uid, [
+                ('invoice_id', '=', invoice.id),
+                ('product_id', '!=', False),
+                ], context=context)
         lines = line_obj.browse(cr, uid, line_ids, context=context)
         for line in lines:
             #  get current supplier price
@@ -67,20 +70,14 @@ class Invoice(orm.Model):
                 }
             self.pool['account.invoice.updateprice.line'].create(
                 cr, uid, var, context=context)
-        datamodel = self.pool.get('ir.model.data')
-        view_id = datamodel.get_object_reference(
-            cr, uid, 'product_supplier_price_from_invoice',
-            'account_invoice_updateprice_form')
-        res_id = price_wizard_id
 
         return {
             'view_mode': 'form',
             'res_model': 'account.invoice.updateprice',
-            'view_id': view_id[1],
             'type': 'ir.actions.act_window',
             'target': 'new',
             'nodestroy': True,
-            'res_id': res_id
+            'res_id': price_wizard_id
             }
 
 
@@ -107,13 +104,47 @@ class UpdatePrice(orm.TransientModel):
 
     _name = 'account.invoice.updateprice'
     _description = 'Update Prices on this invoice'
+
+    def _get_partner_id(self, cr, uid, ids, field_name, args, context=None):
+        """
+        The invoiced partner can be another partner than the purchase
+        partner. Supplier pricelists don't generalize within the same
+        partner, but are only retrieved by contact. As a workaround, take
+        the partner from the related purchase if any as a best guess.
+        If no purchase order can be found, pick the commercial partner
+        over an invoice partner.
+        """
+        purchase_obj = self.pool['purchase.order']
+        res = {}
+        for wiz in self.browse(cr, uid, ids, context=context):
+            purchase_ids = purchase_obj.search(
+                cr, uid, [('invoice_ids', '=', wiz.account_invoice_id.id)],
+                context=context)
+            if purchase_ids:
+                purchase = purchase_obj.browse(
+                    cr, uid, purchase_ids[0], context=context)
+                res[wiz.id] = purchase.partner_id.id
+                print purchase.partner_id.name
+            else:
+                partner = wiz.account_invoice_id.partner_id
+                if partner.type == 'invoice':
+                    partner = partner.commercial_partner_id
+                res[wiz.id] = partner.id
+        return res
+
     _columns = {
         'update_price_line_ids': fields.one2many(
             'account.invoice.updateprice.line', 'updateprice_id'),
         'account_invoice_id': fields.many2one(
             'account.invoice',
-            'The invoice this object has been generated from'),
-        'supplier_name': fields.char('Supplier name', readonly=True)
+            'The invoice this object has been generated from',
+            required=True),
+        'partner_id': fields.function(
+            _get_partner_id, type='many2one', relation='res.partner',
+            string='Supplier'),
+        'supplier_name': fields.related(
+            'partner_id', 'name', type='char', size=256,
+            string='Supplier name', readonly=True),
     }
     _defaults = {}
 
@@ -130,7 +161,7 @@ class UpdatePrice(orm.TransientModel):
             info_ids = supplierinfo_obj.search(cr, uid, [
                 ('product_id', '=', product.product_tmpl_id.id),
                 ('name', '=',
-                 wizard.account_invoice_id.partner_id.id),
+                 wizard.partner_id.id),
             ], context=context)
             # supplier exists just change or add pricelists
             if info_ids:
@@ -138,7 +169,7 @@ class UpdatePrice(orm.TransientModel):
             else:
                 vals_si = {
                     'product_id': product.product_tmpl_id.id,
-                    'name': wizard.account_invoice_id.partner_id.id,
+                    'name': wizard.partner_id.id,
                     'min_qty': 1.00,
                     'delay': 0
                     }
