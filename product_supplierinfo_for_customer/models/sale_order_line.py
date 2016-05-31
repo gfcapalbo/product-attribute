@@ -22,12 +22,13 @@ class SaleOrderLine(models.Model):
         partner_rec = self.env['res.partner'].browse(partner_id)
         if product_rec.customer_ids:
             selected_supplier_info = product_rec.customer_ids.filtered(
-                lambda x: x.partner_id == partner_rec)[:1]
+                lambda x: x.name == partner_rec).filtered(
+                        lambda q: q.qty <= qty).sorted(lambda s: qty - s.qty)
             if res.get('value', {}).get('name') and selected_supplier_info:
-                pc = product_rec.customer_ids.product_code + '--'
-                pn = product_rec.customer_ids.product_name
+                pc = selected_supplier_info.product_code 
+                pn = selected_supplier_info.product_name
                 if pn and pc:
-                    res['value']['name'] = pc + pn
-                if pn:
+                    res['value']['name'] = pc + '---' + pn
+                if pn and not pc:
                     res['value']['name'] = pn
         return res
