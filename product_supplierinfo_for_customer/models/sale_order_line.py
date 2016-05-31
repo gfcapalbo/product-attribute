@@ -23,7 +23,8 @@ class SaleOrderLine(models.Model):
         if product_rec.customer_ids:
             selected_supplier_info = product_rec.customer_ids.filtered(
                 lambda x: x.name == partner_rec).filtered(
-                        lambda q: q.qty <= qty).sorted(lambda s: qty - s.qty)
+                        lambda q: q.qty <= qty).sorted(
+                                lambda s: qty - s.qty)[-1]
             if res.get('value', {}).get('name') and selected_supplier_info:
                 pc = selected_supplier_info.product_code 
                 pn = selected_supplier_info.product_name
