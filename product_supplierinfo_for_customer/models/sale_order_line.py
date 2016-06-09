@@ -24,10 +24,10 @@ class SaleOrderLine(models.Model):
             selected_supplier_info = product_rec.customer_ids.filtered(
                 lambda x: x.name == partner_rec).filtered(
                         lambda q: q.min_qty <= qty).sorted(
-                                lambda s: qty - s.min_qty)[-1]
+                                lambda s: qty - s.min_qty)
             if res.get('value', {}).get('name') and selected_supplier_info:
-                pc = selected_supplier_info.product_code 
-                pn = selected_supplier_info.product_name
+                pc = selected_supplier_info[-1].product_code 
+                pn = selected_supplier_info[-1].product_name
                 if pn and pc:
                     res['value']['name'] = pc + '---' + pn
                 if pn and not pc:
