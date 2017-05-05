@@ -6,27 +6,14 @@
 product_tag
 ===========
 
-This module was written to extend the functionality of ... to support ...
-and allow you to ...
-
-Installation
-============
-
-To install this module, you need to:
-
-#. do this ...
-
-Configuration
-=============
-
-To configure this module, you need to:
-
-#. go to ...
+Module adds tags to every product
 
 Usage
 =====
 
-To use this module, you need to:
+Add and remove tags on every product from the product form.
+
+
 
 #. go to ...
 .. image:: https://odoo-community.org/website/image/ir.attachment/5784_f2813bd/datas
@@ -37,8 +24,10 @@ To use this module, you need to:
 
 Known issues / Roadmap
 ======================
+TODO tag filters
+TODO tag view, to view all tags present in the system
+TODO smart button for tags?
 
-* ...
 
 Bug Tracker
 ===========
