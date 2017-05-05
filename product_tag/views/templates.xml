@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+        <template id="assets_backend" name="product_tag assets" inherit_id="web.assets_backend">
+            <xpath expr="." position="inside">
+                <script type="text/javascript" src="/product_tag/static/src/js/product_tag.js"></script>
+                <link rel="stylesheet" href="/product_tag/static/src/css/product_tag.css"/>
+            </xpath>
+        </template>
+    </data>
+</openerp>
