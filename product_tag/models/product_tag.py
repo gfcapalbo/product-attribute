@@ -4,10 +4,10 @@
 from openerp import _, api, fields, models
 from openerp.exceptions import ValidationError
 
+
 class ProductTag(models.Model):
     _name = 'product.tag'
     _description = 'Tags on products'
-
 
     @api.model
     def name_search(self, name, args=None, operator='ilike', limit=100):
@@ -25,10 +25,10 @@ class ProductTag(models.Model):
         select=True,  ondelete='cascade'
     )
     child_ids = fields.One2many('product.tag', 'parent_id', 'Child Categories')
-    active= fields.Boolean('Active', default=True)
+    active = fields.Boolean('Active', default=True)
     product_ids = fields.Many2many('product.template', string='Products')
 
-    api.constrains('parent_id')
+    @api.constrains('parent_id')
     def _check_parent_id(self):
         if not self._check_recursion():
             raise ValidationError(_(
