@@ -1,0 +1,2 @@
+"id","name","model_id/id","perm_create","perm_unlink","group_id/id","perm_read","perm_write"
+"product.tag_product_tag_manager","product_tag_manager","product_tag.model_product_tag","True","False","stock.group_stock_manager","True","True"
