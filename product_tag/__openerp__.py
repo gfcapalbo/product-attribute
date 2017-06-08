@@ -12,6 +12,7 @@
         'product',
     ],
     "data": [
+        'security/ir.model.access.csv',
         'views/product_tag.xml',
     ],
 }
