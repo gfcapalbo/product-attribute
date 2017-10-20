@@ -10,6 +10,7 @@
     "summary": "Adds tags to product",
     "depends": [
         'product',
+        'stock',
     ],
     "data": [
         'security/ir.model.access.csv',
